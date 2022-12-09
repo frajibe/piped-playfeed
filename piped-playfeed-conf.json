@@ -1,0 +1,18 @@
+{
+    "instance": "https://piped.kavin.rocks",
+    "account": {
+        "username": "",
+        "password": ""
+    },
+    "database": "piped-playfeed.db",
+    "synchronization": {
+        "playlistPrefix": "",
+        "strategy": "month",
+        "type": "duration",
+        "duration": {
+            "unit": "month",
+            "value": 1
+        },
+        "date": "2022-12-01"
+    }
+}

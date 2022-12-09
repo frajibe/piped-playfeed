@@ -11,5 +11,15 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# Playfeed stuff
+*.db
+*.lock
+*log.json
+piped-playfeed
+
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# Misc
+.directories
+.idea/
