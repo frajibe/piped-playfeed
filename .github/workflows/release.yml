@@ -5,56 +5,22 @@ on:
     types: [created]
 
 jobs:
-  build:
+  releases-matrix:
+    name: Release Go Binary
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target:
-          - os: linux
-            arch: "amd64"
-          - os: linux
-            arch: "arm64"
-          - os: darwin
-            arch: "amd64"
-          - os: darwin
-            arch: "arm64"
-          - os: windows
-            arch: "386"
-          - os: windows
-            arch: "amd64"
+        goos: [ linux, windows, darwin ]
+        goarch: [ "386", amd64, arm64 ]
 
-    name: Build and publish package
     steps:
       - uses: actions/checkout@v3
-
-      - uses: actions/setup-go@v3
+      - uses: wangyoucao577/go-release-action@v1.34
         with:
-          go-version: v1.19
-
-      - name: Set .exe extension for Windows
-        run: echo "EXTENSION=.exe" >> $GITHUB_ENV
-        if: matrix.target.os == 'windows'
-
-      - name: Set executable filename
-        run: echo "FILENAME=piped-playfeed-${{ matrix.target.os }}-${{ matrix.target.arch }}${{ env.EXTENSION }}" >> $GITHUB_ENV
-
-      - name: Build
-        run: go build -o bin/${{ env.FILENAME }}
-        env:
-          GOOS: "${{ matrix.target.os }}"
-          GOARCH: "${{ matrix.target.arch }}"
-
-      - name: Compute checksums
-        run: shasum --algorithm 256 bin/${{ env.FILENAME }} > bin/${{ env.FILENAME }}.sha256
-
-      - uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: bin/${{ env.FILENAME }}
-          tag: ${{ github.ref }}
-
-      - uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: bin/${{ env.FILENAME }}.sha256
-          tag: ${{ github.ref }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          goversion: "https://dl.google.com/go/go1.19.3.linux-amd64.tar.gz"
+          project_path: "."
+          binary_name: "piped-playfeed"
+          extra_files: LICENSE README.md
