@@ -25,10 +25,9 @@ jobs:
 
     name: Build and publish package
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Install dependencies
-        uses: actions/setup-go@v3
+      - uses: actions/setup-go@v3
         with:
           go-version: v1.19
 
@@ -40,7 +39,7 @@ jobs:
         run: echo "FILENAME=piped-playfeed-${{ matrix.target.os }}-${{ matrix.target.arch }}${{ env.EXTENSION }}" >> $GITHUB_ENV
 
       - name: Build
-        run: make OUTPUT=bin/${{ env.FILENAME }}
+        run: go build -o bin/${{ env.FILENAME }}
         env:
           GOOS: "${{ matrix.target.os }}"
           GOARCH: "${{ matrix.target.arch }}"
