@@ -23,4 +23,3 @@ jobs:
           goversion: "https://dl.google.com/go/go1.19.3.linux-amd64.tar.gz"
           binary_name: "piped-playfeed"
           extra_files: LICENSE README.md
-          build_flags: -tags "libsqlite3"
