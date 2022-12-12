@@ -4,7 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	dbCommon "piped-playfeed/db/common"
 	"strings"
+
+	"github.com/mattn/go-sqlite3"
 )
 
 type SQLiteVideoRepository struct {
@@ -34,6 +37,12 @@ func (r *SQLiteVideoRepository) Migrate() error {
 func (r *SQLiteVideoRepository) Create(subscriptionVideo SubscriptionVideo) (*SubscriptionVideo, error) {
 	_, err := r.db.Exec("INSERT INTO subscriptions_videos(id, date, removed, playlist) values(?, ?, ?, ?)", subscriptionVideo.Id, subscriptionVideo.Date, subscriptionVideo.Removed, subscriptionVideo.Playlist)
 	if err != nil {
+		var sqliteErr sqlite3.Error
+		if errors.As(err, &sqliteErr) {
+			if errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) {
+				return nil, dbCommon.ErrDuplicate
+			}
+		}
 		return nil, err
 	}
 	return &subscriptionVideo, nil
@@ -44,6 +53,9 @@ func (r *SQLiteVideoRepository) GetById(id string) (*SubscriptionVideo, error) {
 
 	var subscriptionVideo SubscriptionVideo
 	if err := row.Scan(&subscriptionVideo.Id, &subscriptionVideo.Date, &subscriptionVideo.Removed, &subscriptionVideo.Playlist); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, dbCommon.ErrNotExists
+		}
 		return nil, err
 	}
 	return &subscriptionVideo, nil
@@ -60,6 +72,9 @@ func (r *SQLiteVideoRepository) GetByPlaylist(playlistName string) (*[]Subscript
 	for rows.Next() {
 		var video SubscriptionVideo
 		if err := rows.Scan(&video.Id, &video.Date, &video.Removed, &video.Playlist); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return nil, dbCommon.ErrNotExists
+			}
 			return nil, err
 		}
 		videos = append(videos, video)
@@ -77,9 +92,13 @@ func (r *SQLiteVideoRepository) Update(id string, updated SubscriptionVideo) (*S
 		return nil, err
 	}
 
-	_, err = res.RowsAffected()
+	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		return nil, err
+	}
+
+	if rowsAffected == 0 {
+		return nil, dbCommon.ErrUpdateFailed
 	}
 
 	return &updated, nil

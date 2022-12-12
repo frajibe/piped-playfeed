@@ -3,6 +3,7 @@ package channel
 import (
 	"database/sql"
 	"errors"
+	dbCommon "piped-playfeed/db/common"
 )
 
 type SQLiteChannelRepository struct {
@@ -30,6 +31,12 @@ func (r *SQLiteChannelRepository) Migrate() error {
 func (r *SQLiteChannelRepository) Create(subscriptionChannel SubscriptionChannel) (*SubscriptionChannel, error) {
 	_, err := r.db.Exec("INSERT INTO subscriptions_channels(id, lastVideoDate) values(?, ?)", subscriptionChannel.Id, subscriptionChannel.LastVideoDate)
 	if err != nil {
+		//var sqliteErr sqlite3.Error
+		//if errors.As(err, &sqliteErr) {
+		//	if errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) {
+		//		return nil, dbCommon.ErrDuplicate
+		//	}
+		//}
 		return nil, err
 	}
 	return &subscriptionChannel, nil
@@ -40,6 +47,9 @@ func (r *SQLiteChannelRepository) GetById(id string) (*SubscriptionChannel, erro
 
 	var subscriptionChannel SubscriptionChannel
 	if err := row.Scan(&subscriptionChannel.Id, &subscriptionChannel.LastVideoDate); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, dbCommon.ErrNotExists
+		}
 		return nil, err
 	}
 	return &subscriptionChannel, nil
@@ -54,9 +64,13 @@ func (r *SQLiteChannelRepository) Update(id string, updated SubscriptionChannel)
 		return nil, err
 	}
 
-	_, err = res.RowsAffected()
+	rowsAffected, err := res.RowsAffected()
 	if err != nil {
 		return nil, err
+	}
+
+	if rowsAffected == 0 {
+		return nil, dbCommon.ErrUpdateFailed
 	}
 
 	return &updated, nil
