@@ -23,4 +23,4 @@ jobs:
           goversion: "https://dl.google.com/go/go1.19.3.linux-amd64.tar.gz"
           binary_name: "piped-playfeed"
           extra_files: LICENSE README.md
-          pre_command: export CGO_ENABLED=1
+          pre_command: export CGO_ENABLED=0
