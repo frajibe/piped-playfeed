@@ -31,7 +31,7 @@ Thus, at the next run, _piped-playfeed_ will stop to request channel videos once
 
 ### From releases
 
-Releases contain prebuilt binaries for Linux, macOS and Windows. You can download them at [https://github.com/frajibe/piped-playfeed](https://github.com/frajibe/piped-playfeed).
+Releases contain prebuilt binaries for Linux, macOS and Windows. You can download them at [https://github.com/frajibe/piped-playfeed/releases](https://github.com/frajibe/piped-playfeed/releases).
 
 ### From sources
 
