@@ -10,13 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        goos: [ linux, windows, darwin ]
-        goarch: [ "386", amd64, arm64 ]
-        exclude:
-          - goarch: "386"
-            goos: darwin
-          - goarch: arm64
-            goos: windows
+        goos: [ linux, windows ]
+        goarch: [ amd64 ]
 
     steps:
       - uses: actions/checkout@v3
@@ -28,3 +23,5 @@ jobs:
           goversion: "https://dl.google.com/go/go1.19.3.linux-amd64.tar.gz"
           binary_name: "piped-playfeed"
           extra_files: LICENSE README.md
+          pre_command: export CGO_ENABLED=0
+          ldflags: -extldflags -static
