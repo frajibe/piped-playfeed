@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	_ "github.com/mattn/go-sqlite3"
 	"piped-playfeed/config"
 	channelDb "piped-playfeed/db/channel"
 	videoDb "piped-playfeed/db/video"
