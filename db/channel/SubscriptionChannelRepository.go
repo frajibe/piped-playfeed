@@ -31,12 +31,6 @@ func (r *SQLiteChannelRepository) Migrate() error {
 func (r *SQLiteChannelRepository) Create(subscriptionChannel SubscriptionChannel) (*SubscriptionChannel, error) {
 	_, err := r.db.Exec("INSERT INTO subscriptions_channels(id, lastVideoDate) values(?, ?)", subscriptionChannel.Id, subscriptionChannel.LastVideoDate)
 	if err != nil {
-		//var sqliteErr sqlite3.Error
-		//if errors.As(err, &sqliteErr) {
-		//	if errors.Is(sqliteErr.ExtendedCode, sqlite3.ErrConstraintUnique) {
-		//		return nil, dbCommon.ErrDuplicate
-		//	}
-		//}
 		return nil, err
 	}
 	return &subscriptionChannel, nil
