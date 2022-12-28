@@ -1,4 +1,4 @@
-package dto
+package playlist
 
 type PlaylistDto struct {
 	Id   string

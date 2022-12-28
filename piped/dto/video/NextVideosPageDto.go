@@ -1,6 +1,6 @@
-package dto
+package video
 
-type NextPageDto struct {
+type NextVideosPageDto struct {
 	Nextpage       string
 	RelatedStreams []VideoDto
 }

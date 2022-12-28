@@ -1,6 +1,6 @@
-package playlist
+package video
 
-type AppendVideosIntoPlaylistReq struct {
+type AppendVideosIntoPlaylist struct {
 	PlaylistId string    `json:"playlistId"`
 	VideoIds   *[]string `json:"videoIds"`
 }

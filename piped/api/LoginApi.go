@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	pipedDto "piped-playfeed/piped/dto"
+	pipedLoginDto "piped-playfeed/piped/dto/login"
 	"time"
 )
 
@@ -18,8 +18,15 @@ func GetToken() string {
 
 func Login(username string, password string, instanceBaseUrl string) error {
 	// perform the request
-	payload := fmt.Sprintf("{\"username\" : \"%v\", \"password\" : \"%v\"}", username, password)
-	req, err := http.NewRequest("POST", instanceBaseUrl+"/login", bytes.NewBufferString(payload))
+	var requestDto = pipedLoginDto.LoginRequestDto{
+		Username: username,
+		Password: password,
+	}
+	payload, err := json.Marshal(requestDto)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", instanceBaseUrl+"/login", bytes.NewBuffer(payload))
 	if err != nil {
 		return err
 	}
@@ -41,7 +48,7 @@ func Login(username string, password string, instanceBaseUrl string) error {
 	if err != nil {
 		return err
 	}
-	var loginRespDto pipedDto.LoginDto
+	var loginRespDto pipedLoginDto.LoginResponseDto
 	err = json.Unmarshal(body, &loginRespDto)
 	if err != nil {
 		return err

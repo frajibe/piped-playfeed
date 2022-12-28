@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	pipedDto "piped-playfeed/piped/dto"
 	pipedPlaylistDto "piped-playfeed/piped/dto/playlist"
+	pipedVideoDto "piped-playfeed/piped/dto/video"
 	"piped-playfeed/utils"
 	"time"
 )
 
-func FetchPlaylists(instanceBaseUrl string, userToken string) (*[]pipedDto.PlaylistDto, error) {
+func FetchPlaylists(instanceBaseUrl string, userToken string) (*[]pipedPlaylistDto.PlaylistDto, error) {
 	// perform the request
 	req, err := http.NewRequest("GET", instanceBaseUrl+"/user/playlists/", nil)
 	if err != nil {
@@ -36,7 +36,7 @@ func FetchPlaylists(instanceBaseUrl string, userToken string) (*[]pipedDto.Playl
 	if err != nil {
 		return nil, err
 	}
-	var playlists []pipedDto.PlaylistDto
+	var playlists []pipedPlaylistDto.PlaylistDto
 	err = json.Unmarshal(body, &playlists)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func FetchPlaylists(instanceBaseUrl string, userToken string) (*[]pipedDto.Playl
 	return &playlists, nil
 }
 
-func FetchPlaylistVideos(id string, instanceBaseUrl string, userToken string) (*[]pipedDto.VideoDto, error) {
+func FetchPlaylistVideos(id string, instanceBaseUrl string, userToken string) (*[]pipedVideoDto.VideoDto, error) {
 	// perform the request
 	req, err := http.NewRequest("GET", instanceBaseUrl+"/playlists/"+id, nil)
 	if err != nil {
@@ -68,7 +68,7 @@ func FetchPlaylistVideos(id string, instanceBaseUrl string, userToken string) (*
 	if err != nil {
 		return nil, err
 	}
-	var playlistInfo pipedDto.PlaylistInfoDto
+	var playlistInfo pipedPlaylistDto.PlaylistInfoDto
 	err = json.Unmarshal(body, &playlistInfo)
 	if err != nil {
 		return nil, err
@@ -76,9 +76,16 @@ func FetchPlaylistVideos(id string, instanceBaseUrl string, userToken string) (*
 	return &playlistInfo.RelatedStreams, nil
 }
 
-func CreatePlaylist(name string, instanceBaseUrl string, userToken string) (*pipedDto.CreatedPlaylistDto, error) {
+func CreatePlaylist(name string, instanceBaseUrl string, userToken string) (*pipedPlaylistDto.CreatedPlaylistDto, error) {
 	// perform the request
-	req, err := http.NewRequest("POST", instanceBaseUrl+"/user/playlists/create", bytes.NewBufferString("{\"name\" : \""+name+"\"}"))
+	var requestDto = pipedPlaylistDto.CreatePlaylistDto{
+		Name: name,
+	}
+	payload, err := json.Marshal(requestDto)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", instanceBaseUrl+"/user/playlists/create", bytes.NewBuffer(payload))
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +108,7 @@ func CreatePlaylist(name string, instanceBaseUrl string, userToken string) (*pip
 	if err != nil {
 		return nil, err
 	}
-	var playlist pipedDto.CreatedPlaylistDto
+	var playlist pipedPlaylistDto.CreatedPlaylistDto
 	err = json.Unmarshal(body, &playlist)
 	if err != nil {
 		return nil, err
@@ -110,7 +117,7 @@ func CreatePlaylist(name string, instanceBaseUrl string, userToken string) (*pip
 }
 
 func AddVideosIntoPlaylist(playlistId string, videoIds *[]string, instanceBaseUrl string, userToken string) error {
-	var requestDto = pipedPlaylistDto.AppendVideosIntoPlaylistReq{
+	var requestDto = pipedVideoDto.AppendVideosIntoPlaylist{
 		PlaylistId: playlistId,
 		VideoIds:   videoIds,
 	}
@@ -144,8 +151,15 @@ func RemoveAllPlaylistVideos(playlistId string, instanceBaseUrl string, userToke
 	}
 	playlistVideosCount := len(*playlistVideos)
 	for i := 0; i < playlistVideosCount; i++ {
-		var payload = "{\"playlistId\":\"" + playlistId + "\",\"index\":0}"
-		req, err := http.NewRequest("POST", instanceBaseUrl+"/user/playlists/remove", bytes.NewBufferString(payload))
+		var requestDto = pipedVideoDto.DeletePlaylistVideoDto{
+			PlaylistId: playlistId,
+			Index:      0,
+		}
+		payload, err := json.Marshal(requestDto)
+		if err != nil {
+			return err
+		}
+		req, err := http.NewRequest("POST", instanceBaseUrl+"/user/playlists/remove", bytes.NewBuffer(payload))
 		if err != nil {
 			return err
 		}

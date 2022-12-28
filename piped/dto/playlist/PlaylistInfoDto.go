@@ -1,9 +1,7 @@
-package dto
+package playlist
 
 import pipedVideoDto "piped-playfeed/piped/dto/video"
 
-type ChannelDto struct {
-	Id             string
-	Nextpage       string
+type PlaylistInfoDto struct {
 	RelatedStreams []pipedVideoDto.VideoDto
 }
