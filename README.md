@@ -51,11 +51,11 @@ See below for the details of the configuration.
 
 #### Base
 
-| Attribute        | Description                             | Mandatory |       Default       |
-|:-----------------|:----------------------------------------|:---------:|:-------------------:|
-| `instance`       | An url to a Piped instance              |    YES    |                     |
-| `account`        | Credentials for the Piped instance      |    YES    |                     |
-| `database`       | Path to the local Sqlite database       |    no     | `piped-playfeed.db` |
+| Attribute        | Description                        | Mandatory |       Default       |
+|:-----------------|:-----------------------------------|:---------:|:-------------------:|
+| `instance`       | Url to the Piped instance API      |    YES    |                     |
+| `account`        | Credentials for the Piped instance |    YES    |                     |
+| `database`       | Path to the local Sqlite database  |    no     | `piped-playfeed.db` |
 
 #### Synchronization feature
 
