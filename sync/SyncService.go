@@ -167,8 +167,9 @@ func (syncService *SynchronizationService) gatherSubscriptionsNewVideos(pipedSub
 			msg := fmt.Sprintf("Unable to retrieve new videos for the channel '%s'", pipedSubscription.Name)
 			utils.GetLoggingService().ConsoleWarn(msg)
 			utils.GetLoggingService().WarnFromError(utils.WrapError(msg, err))
+		} else {
+			subscribedPipedVideos = append(subscribedPipedVideos, *newPipedVideos...)
 		}
-		subscribedPipedVideos = append(subscribedPipedVideos, *newPipedVideos...)
 	}
 
 	// sort them by creation date
