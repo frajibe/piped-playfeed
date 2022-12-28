@@ -180,15 +180,6 @@ There are multiple solutions to periodically run an application, here are some e
     0 16 * * * bash -c '/home/me/piped-playfeed --conf /home/me/playfeed-conf.json --sync --silent'
     ```
 
-## Limitations known
-
-### The first synchronization is so slow!
-
-When synchronizing for the first time, the process may be long according to the selected start date.<br>
-Indeed, it's actually a current limitation of the Piped API which only allows to insert one video at time into a playlist.
-
-Thanks to the local database the next synchronizations will be faster.
-
 ## Troubleshooting
 
 ### A lock file prevents the app from running

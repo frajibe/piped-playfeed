@@ -278,16 +278,15 @@ func (syncService *SynchronizationService) syncPipedPlaylists(playlistNames []st
 			return utils.WrapError(fmt.Sprintf("can't read the playlist from database '%s'", playlistName), err)
 		}
 		progressBar := utils.CreateProgressBar(len(*videos), fmt.Sprintf("'%s'", playlistName))
+		var pipedVideoIds []string
 		for _, video := range *videos {
-			utils.IncrementProgressBar(progressBar)
-			pipedVideo := pipedDto.VideoDto{
-				Url: pipedApi.BuildVideoUrl(video.Id),
-			}
-			err := pipedApi.AddVideoIntoPlaylist(playlistId, &pipedVideo, config.GetConfigurationServiceInstance().Configuration.Instance, pipedApi.GetToken())
-			if err != nil {
-				return utils.WrapError(fmt.Sprintf("can't insert video into playlist '%s'", playlistName), err)
-			}
+			pipedVideoIds = append(pipedVideoIds, video.Id)
 		}
+		err = pipedApi.AddVideosIntoPlaylist(playlistId, &pipedVideoIds, config.GetConfigurationServiceInstance().Configuration.Instance, pipedApi.GetToken())
+		if err != nil {
+			return utils.WrapError(fmt.Sprintf("can't insert videos into playlist '%s'", playlistName), err)
+		}
+		utils.FinalizeProgressBar(progressBar, len(*videos))
 	}
 	utils.GetLoggingService().Debug("... populating done")
 	return nil

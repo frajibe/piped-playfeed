@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	pipedDto "piped-playfeed/piped/dto"
+	pipedPlaylistDto "piped-playfeed/piped/dto/playlist"
 	"piped-playfeed/utils"
 	"time"
 )
@@ -108,10 +109,16 @@ func CreatePlaylist(name string, instanceBaseUrl string, userToken string) (*pip
 	return &playlist, nil
 }
 
-func AddVideoIntoPlaylist(playlistId string, video *pipedDto.VideoDto, instanceBaseUrl string, userToken string) error {
-	videoId := ExtractIdFromUrl(video.Url)
-	var payload = "{\"playlistId\":\"" + playlistId + "\",\"videoId\":\"" + videoId + "\"}"
-	req, err := http.NewRequest("POST", instanceBaseUrl+"/user/playlists/add", bytes.NewBufferString(payload))
+func AddVideosIntoPlaylist(playlistId string, videoIds *[]string, instanceBaseUrl string, userToken string) error {
+	var requestDto = pipedPlaylistDto.AppendVideosIntoPlaylistReq{
+		PlaylistId: playlistId,
+		VideoIds:   videoIds,
+	}
+	payload, err := json.Marshal(requestDto)
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequest("POST", instanceBaseUrl+"/user/playlists/add", bytes.NewBuffer(payload))
 	if err != nil {
 		return err
 	}
