@@ -132,7 +132,7 @@ func AddVideosIntoPlaylist(playlistId string, videoIds *[]string, instanceBaseUr
 	req.Header.Set("Authorization", userToken)
 	req.Header.Set("content-type", "application/json")
 	client := &http.Client{
-		Timeout: time.Second * 60,
+		Timeout: time.Second * 180,
 	}
 	response, err := client.Do(req)
 	if err != nil {
