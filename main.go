@@ -79,7 +79,7 @@ func parseArguments() {
 
 	// is version requested?
 	if *versionFlag {
-		utils.GetLoggingService().Console("v1.0.0")
+		utils.GetLoggingService().Console("v1.0.1")
 		os.Exit(0)
 	}
 
