@@ -96,7 +96,8 @@ func fetchPaginatedVideos(channelId string, oldestDateAllowed time.Time, nextPag
 
 func isVideoAllowed(video pipedDto.VideoDto, oldestDateAllowed time.Time) bool {
 	videoDate := time.UnixMilli(video.Uploaded)
-	return !videoDate.Before(oldestDateAllowed) && !videoDate.Equal(oldestDateAllowed)
+	var scheduledInFuture = videoDate.After(time.Now())
+	return !videoDate.Before(oldestDateAllowed) && !videoDate.Equal(oldestDateAllowed) && !scheduledInFuture
 }
 
 func ExtractIdFromUrl(url string) string {
