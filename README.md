@@ -180,6 +180,14 @@ There are multiple solutions to periodically run an application, here are some e
     0 16 * * * bash -c '/home/me/piped-playfeed --conf /home/me/playfeed-conf.json --sync --silent'
     ```
 
+## Limitations
+
+### Videos manually added to the playlist are removed
+
+For now, _piped-playfeed_ doesn't manage the videos manually added into its playlists (i.e. the ones created by _piped-playfeed_). These are always removed when synchronizing.
+
+As a workaround, add videos using your own playlists.
+
 ## Troubleshooting
 
 ### A lock file prevents the app from running
@@ -189,11 +197,11 @@ A lock file is created at the startup of the application, and automatically remo
 If this file is not removed, check the content of the log file in order to find out the reason, and finally remove the lock file.
 If you think you're facing to a bug, please open a ticket on GitHub.
 
-### It seems that the old videos are grouped by channel and then by date
+### Old videos are weirdly ordered by date
 
 YouTube provides a video timestamp more of less accurate, that's why it's not straightforward to sort the videos with a reliable publication date. Indeed, at some point the old videos have a rounded timestamp, and so when videos have the same timestamp, they are sorted by channel.
 
-It happens when the synchronization is not ran often, the timestamp of the videos is too rounded. Try to synchronize more often in order to get the timestamps with the most accuracy possible.
+It happens when the synchronization is not ran often, the timestamp of the old videos may be too rounded. Try to synchronize more often in order to get the timestamps with the most accuracy possible.
 
 ## License
 
