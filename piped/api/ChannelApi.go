@@ -8,7 +8,7 @@ import (
 	"net/url"
 	pipedDto "piped-playfeed/piped/dto"
 	pipedVideoDto "piped-playfeed/piped/dto/video"
-	"strings"
+	"piped-playfeed/utils"
 	"time"
 )
 
@@ -33,19 +33,26 @@ func FetchChannel(subscription pipedDto.SubscriptionDto, instanceBaseUrl string)
 	return &channel, nil
 }
 
-func FetchChannelVideos(channel *pipedDto.ChannelDto, oldestDateAllowed time.Time, instanceBaseUrl string) (*[]pipedVideoDto.VideoDto, error) {
-	var videos []pipedVideoDto.VideoDto
-	lastVideoRecent := false
-	for _, video := range channel.RelatedStreams {
-		if isVideoAllowed(video, oldestDateAllowed) {
-			videos = append(videos, video)
-			lastVideoRecent = true
+func FetchChannelVideos(channel *pipedDto.ChannelDto, startDate time.Time, instanceBaseUrl string) (*[]pipedVideoDto.StreamDto, error) {
+	var videos []pipedVideoDto.StreamDto
+	requestNextPage := false
+	for _, relatedStream := range channel.RelatedStreams {
+		video, err := FetchVideo(relatedStream, instanceBaseUrl)
+		if err != nil {
+			msg := fmt.Sprintf("unable to retrieve details for the video '%s'", relatedStream.Url)
+			utils.GetLoggingService().WarnFromError(utils.WrapError(msg, err))
 		} else {
-			lastVideoRecent = false
+			if isVideoAllowed(video, startDate) {
+				videos = append(videos, *video)
+				requestNextPage = true
+			} else {
+				requestNextPage = false
+				break
+			}
 		}
 	}
-	if lastVideoRecent {
-		paginatedVideos, err := fetchPaginatedVideos(channel.Id, oldestDateAllowed, channel.Nextpage, instanceBaseUrl)
+	if requestNextPage {
+		paginatedVideos, err := fetchPaginatedVideos(channel.Id, startDate, channel.Nextpage, instanceBaseUrl)
 		if err != nil {
 			return nil, err
 		}
@@ -54,7 +61,7 @@ func FetchChannelVideos(channel *pipedDto.ChannelDto, oldestDateAllowed time.Tim
 	return &videos, nil
 }
 
-func fetchPaginatedVideos(channelId string, oldestDateAllowed time.Time, nextPageUrl string, instanceBaseUrl string) (*[]pipedVideoDto.VideoDto, error) {
+func fetchPaginatedVideos(channelId string, startDate time.Time, nextPageUrl string, instanceBaseUrl string) (*[]pipedVideoDto.StreamDto, error) {
 	// perform the request
 	response, err := http.Get(instanceBaseUrl + "/nextpage/channel/" + channelId + "?nextpage=" + url.QueryEscape(nextPageUrl))
 	if err != nil {
@@ -75,18 +82,25 @@ func fetchPaginatedVideos(channelId string, oldestDateAllowed time.Time, nextPag
 	if err != nil {
 		return nil, err
 	}
-	var videos []pipedVideoDto.VideoDto
-	var lastVideoRecent = false
-	for _, video := range nextPage.RelatedStreams {
-		if isVideoAllowed(video, oldestDateAllowed) {
-			videos = append(videos, video)
-			lastVideoRecent = true
+	var videos []pipedVideoDto.StreamDto
+	var requestNextPage = false
+	for _, relatedStream := range nextPage.RelatedStreams {
+		video, err := FetchVideo(relatedStream, instanceBaseUrl)
+		if err != nil {
+			msg := fmt.Sprintf("unable to retrieve details for the video '%s'", relatedStream.Url)
+			utils.GetLoggingService().WarnFromError(utils.WrapError(msg, err))
 		} else {
-			lastVideoRecent = false
+			if isVideoAllowed(video, startDate) {
+				videos = append(videos, *video)
+				requestNextPage = true
+			} else {
+				requestNextPage = false
+				break
+			}
 		}
 	}
-	if lastVideoRecent {
-		nextVideos, err := fetchPaginatedVideos(channelId, oldestDateAllowed, nextPage.Nextpage, instanceBaseUrl)
+	if requestNextPage {
+		nextVideos, err := fetchPaginatedVideos(channelId, startDate, nextPage.Nextpage, instanceBaseUrl)
 		if err != nil {
 			return nil, err
 		}
@@ -95,16 +109,7 @@ func fetchPaginatedVideos(channelId string, oldestDateAllowed time.Time, nextPag
 	return &videos, nil
 }
 
-func isVideoAllowed(video pipedVideoDto.VideoDto, oldestDateAllowed time.Time) bool {
-	videoDate := time.UnixMilli(video.Uploaded)
-	var scheduledInFuture = videoDate.After(time.Now())
-	return !videoDate.Before(oldestDateAllowed) && !videoDate.Equal(oldestDateAllowed) && !scheduledInFuture
-}
-
-func ExtractIdFromUrl(url string) string {
-	return strings.Split(url, "=")[1]
-}
-
-func BuildVideoUrl(videoId string) string {
-	return fmt.Sprintf("watch?v=%v", videoId)
+func isVideoAllowed(video *pipedVideoDto.StreamDto, startDate time.Time) bool {
+	videoDate, _ := time.Parse("2006-01-02", video.UploadDate)
+	return !videoDate.Before(startDate) && !videoDate.After(time.Now())
 }

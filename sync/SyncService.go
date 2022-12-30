@@ -63,9 +63,9 @@ func (syncService *SynchronizationService) Synchronize() error {
 	}
 	utils.FinalizeProgressBar(channelProgressBar, len(*pipedPlaylists))
 
-	// sync the db with the existing playlist
+	// sync the db with the existing playlists
 	videoRepository := db.GetDatabaseServiceInstance().VideoRepository
-	err = syncService.synchronizeDbPlaylists(pipedPlaylists, videoRepository, pipedApi.GetToken())
+	err = syncService.syncPipedPlaylistsToDb(pipedPlaylists, videoRepository, pipedApi.GetToken())
 	if err != nil {
 		return utils.WrapError("unable to synchronize the playlists in database", err)
 	}
@@ -82,36 +82,39 @@ func (syncService *SynchronizationService) Synchronize() error {
 	utils.GetLoggingService().Info(fmt.Sprintf("%d new videos found", len(*newPipedVideos)))
 
 	// populate the db with the new videos
-	relatedPlaylistNames, err := syncService.indexVideos(newPipedVideos, videoRepository)
+	playlistsToUpdate, err := syncService.indexVideos(newPipedVideos, videoRepository)
 	if err != nil {
 		return utils.WrapError("unable to index the new videos into the database", err)
 	}
 
 	// sync the piped playlists with the db
-	err = syncService.syncPipedPlaylists(relatedPlaylistNames, videoRepository)
+	err = syncService.syncPipedPlaylistsFromDb(playlistsToUpdate, videoRepository)
 	if err != nil {
 		return utils.WrapError("unable to synchronize the Piped instance playlists", err)
 	}
 	return nil
 }
 
-func (syncService *SynchronizationService) indexVideos(newPipedVideos *[]pipedVideoDto.VideoDto, videoRepository *videoDb.SQLiteVideoRepository) ([]string, error) {
+func (syncService *SynchronizationService) indexVideos(newPipedVideos *[]pipedVideoDto.StreamDto, videoRepository *videoDb.SQLiteVideoRepository) ([]string, error) {
 	utils.GetLoggingService().Debug("Indexing new videos")
 	var relatedPlaylistNames = make(map[string]struct{})
 	playlistPrefix := config.GetConfigurationServiceInstance().Configuration.Synchronization.PlaylistPrefix
 	playlistStrategy := config.GetConfigurationServiceInstance().Configuration.Synchronization.Strategy
 	progressBar := utils.CreateProgressBar(len(*newPipedVideos), "[5/6] Indexing new videos...")
 	for _, newPipedVideo := range *newPipedVideos {
-		videoId := pipedApi.ExtractIdFromUrl(newPipedVideo.Url)
+		videoId := pipedApi.ExtractVideoIdFromUrl(newPipedVideo.Url)
 		_, err := videoRepository.GetById(videoId)
 		// try to add the video into db is not already present
 		if err != nil {
 			if errors.Is(err, dbCommon.ErrNotExists) {
 				// the video is new: create it
-				playlistName := syncService.determinePlaylistForVideo(newPipedVideo, playlistPrefix, playlistStrategy)
+				playlistName, err := syncService.determinePlaylistForVideo(newPipedVideo, playlistPrefix, playlistStrategy)
+				if err != nil {
+					return nil, utils.WrapError(fmt.Sprintf("Unable to determine the playlist name for the video '%s'", newPipedVideo.Url), err)
+				}
 				_, err = videoRepository.Create(videoDb.SubscriptionVideo{
 					Id:       videoId,
-					Date:     newPipedVideo.Uploaded,
+					Date:     newPipedVideo.UploadDate,
 					Removed:  0,
 					Playlist: playlistName,
 				})
@@ -135,7 +138,7 @@ func (syncService *SynchronizationService) indexVideos(newPipedVideos *[]pipedVi
 	return uniquePlaylistNames, nil
 }
 
-func (syncService *SynchronizationService) synchronizeDbPlaylists(pipedPlaylists *[]pipedPlaylistDto.PlaylistDto, subscriptionVideoRepository *videoDb.SQLiteVideoRepository, userToken string) error {
+func (syncService *SynchronizationService) syncPipedPlaylistsToDb(pipedPlaylists *[]pipedPlaylistDto.PlaylistDto, subscriptionVideoRepository *videoDb.SQLiteVideoRepository, userToken string) error {
 	// gather the id of the videos that are part of the playlists
 	var playlistsVideosIds []string
 	progressBar := utils.CreateProgressBar(len(*pipedPlaylists), "[3/6] Indexing playlists...")
@@ -145,22 +148,22 @@ func (syncService *SynchronizationService) synchronizeDbPlaylists(pipedPlaylists
 			return utils.WrapError("unable to retrieve the playlists videos", err)
 		}
 		for _, pipedVideo := range *pipedVideos {
-			playlistsVideosIds = append(playlistsVideosIds, pipedApi.ExtractIdFromUrl(pipedVideo.Url))
+			playlistsVideosIds = append(playlistsVideosIds, pipedApi.ExtractVideoIdFromUrl(pipedVideo.Url))
 		}
 		utils.IncrementProgressBar(progressBar)
 	}
 	utils.FinalizeProgressBar(progressBar, len(*pipedPlaylists))
 
 	// tag all the videos that are not part of the playlist as manually removed
-	err := subscriptionVideoRepository.SetAllRemoved(&playlistsVideosIds)
+	err := subscriptionVideoRepository.SetAllRemovedExcept(&playlistsVideosIds)
 	if err != nil {
 		utils.GetLoggingService().Warn(utils.WrapError("unable to mark videos as manually removed", err).Error())
 	}
 	return nil
 }
 
-func (syncService *SynchronizationService) gatherSubscriptionsNewVideos(pipedSubscriptions *[]pipedDto.SubscriptionDto, subscriptionChannelRepository *channelDb.SQLiteChannelRepository) *[]pipedVideoDto.VideoDto {
-	subscribedPipedVideos := make([]pipedVideoDto.VideoDto, 0, 1000)
+func (syncService *SynchronizationService) gatherSubscriptionsNewVideos(pipedSubscriptions *[]pipedDto.SubscriptionDto, subscriptionChannelRepository *channelDb.SQLiteChannelRepository) *[]pipedVideoDto.StreamDto {
+	subscribedPipedVideos := make([]pipedVideoDto.StreamDto, 0, 1000)
 	for _, pipedSubscription := range *pipedSubscriptions {
 		newPipedVideos, err := syncService.gatherSubscriptionNewVideos(pipedSubscription, subscriptionChannelRepository)
 		if err != nil {
@@ -172,14 +175,14 @@ func (syncService *SynchronizationService) gatherSubscriptionsNewVideos(pipedSub
 		}
 	}
 
-	// sort them by creation date
+	// sort them by date
 	sort.Slice(subscribedPipedVideos, func(v1, v2 int) bool {
-		return subscribedPipedVideos[v1].Uploaded > subscribedPipedVideos[v2].Uploaded
+		return subscribedPipedVideos[v1].UploadDate > subscribedPipedVideos[v2].UploadDate
 	})
 	return &subscribedPipedVideos
 }
 
-func (syncService *SynchronizationService) gatherSubscriptionNewVideos(pipedSubscription pipedDto.SubscriptionDto, subscriptionChannelRepository *channelDb.SQLiteChannelRepository) (*[]pipedVideoDto.VideoDto, error) {
+func (syncService *SynchronizationService) gatherSubscriptionNewVideos(pipedSubscription pipedDto.SubscriptionDto, subscriptionChannelRepository *channelDb.SQLiteChannelRepository) (*[]pipedVideoDto.StreamDto, error) {
 	utils.GetLoggingService().Debug(fmt.Sprintf("Fetching subscription channel '%s'", pipedSubscription.Name))
 	configuration := config.GetConfigurationServiceInstance().Configuration
 	pipedChannel, err := pipedApi.FetchChannel(pipedSubscription, configuration.Instance)
@@ -195,7 +198,7 @@ func (syncService *SynchronizationService) gatherSubscriptionNewVideos(pipedSubs
 			utils.GetLoggingService().Debug("... channel not found, creating it...")
 			subscriptionChannel, err = subscriptionChannelRepository.Create(channelDb.SubscriptionChannel{
 				Id:            pipedChannel.Id,
-				LastVideoDate: 0,
+				LastVideoDate: "2000-01-01",
 			})
 			if err != nil {
 				return nil, utils.WrapError(fmt.Sprintf("unable to create the channel in database: '%s'", pipedSubscription.Name), err)
@@ -207,31 +210,14 @@ func (syncService *SynchronizationService) gatherSubscriptionNewVideos(pipedSubs
 		utils.GetLoggingService().Debug("... channel found")
 	}
 
-	// determine the oldest date in the past according to the sync conf and the last video seen in the channel
-	var syncOldestDateAllowed time.Time
-	if strings.EqualFold(configuration.Synchronization.Type, model.SyncDurationType) {
-		now := time.Now()
-		startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
-		switch configuration.Synchronization.Duration.Unit {
-		case model.SyncDurationUnitMonth:
-			syncOldestDateAllowed = startOfDay.AddDate(0, int(-configuration.Synchronization.Duration.Value), 0)
-		case model.SyncDurationUnitDay:
-			syncOldestDateAllowed = startOfDay.AddDate(0, 0, int(-configuration.Synchronization.Duration.Value))
-		}
-	} else {
-		// it assumes that the date has already been checked at startup
-		syncOldestDateAllowed, _ = time.Parse("2006-01-02", configuration.Synchronization.Date)
-	}
-	channelOldestDateAllowed := time.UnixMilli(subscriptionChannel.LastVideoDate)
-	var oldestDateAllowed time.Time
-	if syncOldestDateAllowed.After(channelOldestDateAllowed) {
-		oldestDateAllowed = syncOldestDateAllowed
-	} else {
-		oldestDateAllowed = channelOldestDateAllowed
+	// determine the start date according to the sync conf and the channel info
+	startDate, err := syncService.determineStartDateForChannel(subscriptionChannel, &configuration)
+	if err != nil {
+		return nil, utils.WrapError(fmt.Sprintf("unable to determine the start date for channel '%s'", pipedSubscription.Name), err)
 	}
 
-	utils.GetLoggingService().Debug(fmt.Sprintf("Fetching videos since %s", oldestDateAllowed))
-	videos, err := pipedApi.FetchChannelVideos(pipedChannel, oldestDateAllowed, configuration.Instance)
+	utils.GetLoggingService().Debug(fmt.Sprintf("Fetching videos since %s", startDate))
+	videos, err := pipedApi.FetchChannelVideos(pipedChannel, startDate, configuration.Instance)
 	if err != nil {
 		return nil, utils.WrapError(fmt.Sprintf("unable to retrieve the videos for channel '%s'", pipedSubscription.Name), err)
 	}
@@ -239,7 +225,7 @@ func (syncService *SynchronizationService) gatherSubscriptionNewVideos(pipedSubs
 
 	// update the persisted channel video date
 	if len(*videos) != 0 {
-		subscriptionChannel.LastVideoDate = (*videos)[0].Uploaded
+		subscriptionChannel.LastVideoDate = (*videos)[0].UploadDate
 		if _, err := subscriptionChannelRepository.Update(subscriptionChannel.Id, *subscriptionChannel); err != nil {
 			return nil, utils.WrapError(fmt.Sprintf("Unable to update the channel in database: '%s'", pipedSubscription.Name), err)
 		}
@@ -247,10 +233,41 @@ func (syncService *SynchronizationService) gatherSubscriptionNewVideos(pipedSubs
 	return videos, nil
 }
 
-func (syncService *SynchronizationService) syncPipedPlaylists(playlistNames []string, subscriptionVideoRepository *videoDb.SQLiteVideoRepository) error {
+func (syncService *SynchronizationService) determineStartDateForChannel(subscriptionChannel *channelDb.SubscriptionChannel, configuration *model.Configuration) (time.Time, error) {
+	// get the start date as defined from the configuration
+	var startDateForConf time.Time
+	if strings.EqualFold(configuration.Synchronization.Type, model.SyncDurationType) {
+		now := time.Now()
+		startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+		switch configuration.Synchronization.Duration.Unit {
+		case model.SyncDurationUnitMonth:
+			startDateForConf = startOfDay.AddDate(0, int(-configuration.Synchronization.Duration.Value), 0)
+		case model.SyncDurationUnitDay:
+			startDateForConf = startOfDay.AddDate(0, 0, int(-configuration.Synchronization.Duration.Value))
+		}
+	} else {
+		// it assumes that the date has already been checked at startup
+		startDateForConf, _ = time.Parse("2006-01-02", configuration.Synchronization.Date)
+	}
+
+	// get the max between the configuration date and the last video date of the channel
+	startDateForChannel, err := time.Parse("2006-01-02", subscriptionChannel.LastVideoDate)
+	if err != nil {
+		return time.Now(), err
+	}
+	var startDate time.Time
+	if startDateForConf.After(startDateForChannel) {
+		startDate = startDateForConf
+	} else {
+		startDate = startDateForChannel
+	}
+	return startDate, nil
+}
+
+func (syncService *SynchronizationService) syncPipedPlaylistsFromDb(playlistNames []string, subscriptionVideoRepository *videoDb.SQLiteVideoRepository) error {
 	// retrieve the playlists to be updated
-	utils.GetLoggingService().Debug("Populating playlist...")
-	utils.GetLoggingService().ConsoleProgress("[6/6] Populating playlist...")
+	utils.GetLoggingService().Debug("Populating playlists...")
+	utils.GetLoggingService().ConsoleProgress("[6/6] Populating playlists...")
 	playlistsSortedByName, err := syncService.fetchPlaylistsMap()
 	if err != nil {
 		return err
@@ -295,8 +312,11 @@ func (syncService *SynchronizationService) syncPipedPlaylists(playlistNames []st
 	return nil
 }
 
-func (syncService *SynchronizationService) determinePlaylistForVideo(pipedVideo pipedVideoDto.VideoDto, prefix string, playlistCreationStrategy string) string {
-	videoDate := time.UnixMilli(pipedVideo.Uploaded)
+func (syncService *SynchronizationService) determinePlaylistForVideo(pipedVideo pipedVideoDto.StreamDto, prefix string, playlistCreationStrategy string) (string, error) {
+	videoDate, err := time.Parse("2006-01-02", pipedVideo.UploadDate)
+	if err != nil {
+		return "", err
+	}
 	var strategySuffix string
 	if strings.EqualFold(playlistCreationStrategy, model.PlaylistMonthlyStrategy) {
 		strategySuffix = videoDate.Month().String()
@@ -304,7 +324,7 @@ func (syncService *SynchronizationService) determinePlaylistForVideo(pipedVideo 
 		_, month := videoDate.ISOWeek()
 		strategySuffix = fmt.Sprintf("Week %v", strconv.Itoa(month))
 	}
-	return fmt.Sprintf("%v%v %v", prefix, videoDate.Year(), strategySuffix)
+	return fmt.Sprintf("%v%v %v", prefix, videoDate.Year(), strategySuffix), nil
 }
 
 func (syncService *SynchronizationService) fetchPlaylists() (*[]pipedPlaylistDto.PlaylistDto, error) {

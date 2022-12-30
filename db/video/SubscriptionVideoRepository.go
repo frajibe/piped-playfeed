@@ -96,7 +96,7 @@ func (r *SQLiteVideoRepository) Update(id string, updated SubscriptionVideo) (*S
 	return &updated, nil
 }
 
-func (r *SQLiteVideoRepository) SetAllRemoved(excludedIds *[]string) error {
+func (r *SQLiteVideoRepository) SetAllRemovedExcept(excludedIds *[]string) error {
 	var excludedIdsStr string
 	if len(*excludedIds) != 0 {
 		excludedIdsStr = fmt.Sprintf("('%v')", strings.Join(*excludedIds, "', '"))
