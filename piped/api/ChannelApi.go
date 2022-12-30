@@ -33,8 +33,8 @@ func FetchChannel(subscription pipedDto.SubscriptionDto, instanceBaseUrl string)
 	return &channel, nil
 }
 
-func FetchChannelVideos(channel *pipedDto.ChannelDto, oldestDateAllowed time.Time, instanceBaseUrl string) (*[]pipedVideoDto.VideoDto, error) {
-	var videos []pipedVideoDto.VideoDto
+func FetchChannelVideos(channel *pipedDto.ChannelDto, oldestDateAllowed time.Time, instanceBaseUrl string) (*[]pipedVideoDto.RelatedStreamDto, error) {
+	var videos []pipedVideoDto.RelatedStreamDto
 	lastVideoRecent := false
 	for _, video := range channel.RelatedStreams {
 		if isVideoAllowed(video, oldestDateAllowed) {
@@ -54,7 +54,7 @@ func FetchChannelVideos(channel *pipedDto.ChannelDto, oldestDateAllowed time.Tim
 	return &videos, nil
 }
 
-func fetchPaginatedVideos(channelId string, oldestDateAllowed time.Time, nextPageUrl string, instanceBaseUrl string) (*[]pipedVideoDto.VideoDto, error) {
+func fetchPaginatedVideos(channelId string, oldestDateAllowed time.Time, nextPageUrl string, instanceBaseUrl string) (*[]pipedVideoDto.RelatedStreamDto, error) {
 	// perform the request
 	response, err := http.Get(instanceBaseUrl + "/nextpage/channel/" + channelId + "?nextpage=" + url.QueryEscape(nextPageUrl))
 	if err != nil {
@@ -75,7 +75,7 @@ func fetchPaginatedVideos(channelId string, oldestDateAllowed time.Time, nextPag
 	if err != nil {
 		return nil, err
 	}
-	var videos []pipedVideoDto.VideoDto
+	var videos []pipedVideoDto.RelatedStreamDto
 	var lastVideoRecent = false
 	for _, video := range nextPage.RelatedStreams {
 		if isVideoAllowed(video, oldestDateAllowed) {
@@ -95,7 +95,7 @@ func fetchPaginatedVideos(channelId string, oldestDateAllowed time.Time, nextPag
 	return &videos, nil
 }
 
-func isVideoAllowed(video pipedVideoDto.VideoDto, oldestDateAllowed time.Time) bool {
+func isVideoAllowed(video pipedVideoDto.RelatedStreamDto, oldestDateAllowed time.Time) bool {
 	videoDate := time.UnixMilli(video.Uploaded)
 	var scheduledInFuture = videoDate.After(time.Now())
 	return !videoDate.Before(oldestDateAllowed) && !videoDate.Equal(oldestDateAllowed) && !scheduledInFuture

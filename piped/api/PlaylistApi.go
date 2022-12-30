@@ -44,7 +44,7 @@ func FetchPlaylists(instanceBaseUrl string, userToken string) (*[]pipedPlaylistD
 	return &playlists, nil
 }
 
-func FetchPlaylistVideos(playlistId string, instanceBaseUrl string, userToken string) (*[]pipedVideoDto.VideoDto, error) {
+func FetchPlaylistVideos(playlistId string, instanceBaseUrl string, userToken string) (*[]pipedVideoDto.RelatedStreamDto, error) {
 	// perform the request
 	req, err := http.NewRequest("GET", instanceBaseUrl+"/playlists/"+playlistId, nil)
 	if err != nil {

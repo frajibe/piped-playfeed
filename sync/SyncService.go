@@ -95,7 +95,7 @@ func (syncService *SynchronizationService) Synchronize() error {
 	return nil
 }
 
-func (syncService *SynchronizationService) indexVideos(newPipedVideos *[]pipedVideoDto.VideoDto, videoRepository *videoDb.SQLiteVideoRepository) ([]string, error) {
+func (syncService *SynchronizationService) indexVideos(newPipedVideos *[]pipedVideoDto.RelatedStreamDto, videoRepository *videoDb.SQLiteVideoRepository) ([]string, error) {
 	utils.GetLoggingService().Debug("Indexing new videos")
 	var relatedPlaylistNames = make(map[string]struct{})
 	playlistPrefix := config.GetConfigurationServiceInstance().Configuration.Synchronization.PlaylistPrefix
@@ -159,8 +159,8 @@ func (syncService *SynchronizationService) syncPipedPlaylistsToDb(pipedPlaylists
 	return nil
 }
 
-func (syncService *SynchronizationService) gatherSubscriptionsNewVideos(pipedSubscriptions *[]pipedDto.SubscriptionDto, subscriptionChannelRepository *channelDb.SQLiteChannelRepository) *[]pipedVideoDto.VideoDto {
-	subscribedPipedVideos := make([]pipedVideoDto.VideoDto, 0, 1000)
+func (syncService *SynchronizationService) gatherSubscriptionsNewVideos(pipedSubscriptions *[]pipedDto.SubscriptionDto, subscriptionChannelRepository *channelDb.SQLiteChannelRepository) *[]pipedVideoDto.RelatedStreamDto {
+	subscribedPipedVideos := make([]pipedVideoDto.RelatedStreamDto, 0, 1000)
 	for _, pipedSubscription := range *pipedSubscriptions {
 		newPipedVideos, err := syncService.gatherSubscriptionNewVideos(pipedSubscription, subscriptionChannelRepository)
 		if err != nil {
@@ -179,7 +179,7 @@ func (syncService *SynchronizationService) gatherSubscriptionsNewVideos(pipedSub
 	return &subscribedPipedVideos
 }
 
-func (syncService *SynchronizationService) gatherSubscriptionNewVideos(pipedSubscription pipedDto.SubscriptionDto, subscriptionChannelRepository *channelDb.SQLiteChannelRepository) (*[]pipedVideoDto.VideoDto, error) {
+func (syncService *SynchronizationService) gatherSubscriptionNewVideos(pipedSubscription pipedDto.SubscriptionDto, subscriptionChannelRepository *channelDb.SQLiteChannelRepository) (*[]pipedVideoDto.RelatedStreamDto, error) {
 	utils.GetLoggingService().Debug(fmt.Sprintf("Fetching subscription channel '%s'", pipedSubscription.Name))
 	configuration := config.GetConfigurationServiceInstance().Configuration
 	pipedChannel, err := pipedApi.FetchChannel(pipedSubscription, configuration.Instance)
@@ -195,7 +195,7 @@ func (syncService *SynchronizationService) gatherSubscriptionNewVideos(pipedSubs
 			utils.GetLoggingService().Debug("... channel not found, creating it...")
 			subscriptionChannel, err = subscriptionChannelRepository.Create(channelDb.SubscriptionChannel{
 				Id:            pipedChannel.Id,
-				LastVideoDate: 0,
+				LastVideoDate: "2000-01-01",
 			})
 			if err != nil {
 				return nil, utils.WrapError(fmt.Sprintf("unable to create the channel in database: '%s'", pipedSubscription.Name), err)
@@ -207,11 +207,11 @@ func (syncService *SynchronizationService) gatherSubscriptionNewVideos(pipedSubs
 		utils.GetLoggingService().Debug("... channel found")
 	}
 
-	// determine the oldest date in the past according to the sync conf and the last video seen in the channel
-	oldestDateAllowed := syncService.determineStartDateForChannel(subscriptionChannel, &configuration)
+	// determine the start date according to the sync conf and the channel info
+	startDate := syncService.determineStartDateForChannel(subscriptionChannel, &configuration)
 
-	utils.GetLoggingService().Debug(fmt.Sprintf("Fetching videos since %s", oldestDateAllowed))
-	videos, err := pipedApi.FetchChannelVideos(pipedChannel, oldestDateAllowed, configuration.Instance)
+	utils.GetLoggingService().Debug(fmt.Sprintf("Fetching videos since %s", startDate))
+	videos, err := pipedApi.FetchChannelVideos(pipedChannel, startDate, configuration.Instance)
 	if err != nil {
 		return nil, utils.WrapError(fmt.Sprintf("unable to retrieve the videos for channel '%s'", pipedSubscription.Name), err)
 	}
@@ -245,7 +245,7 @@ func (syncService *SynchronizationService) determineStartDateForChannel(subscrip
 	}
 
 	// get the max between the configuration date and the last video date of the channel
-	startDateForChannel := time.UnixMilli(subscriptionChannel.LastVideoDate)
+	startDateForChannel, _ := time.Parse("2006-01-02", subscriptionChannel.LastVideoDate)
 	var startDate time.Time
 	if startDateForConf.After(startDateForChannel) {
 		startDate = startDateForConf
@@ -303,7 +303,7 @@ func (syncService *SynchronizationService) syncPipedPlaylistsFromDb(playlistName
 	return nil
 }
 
-func (syncService *SynchronizationService) determinePlaylistForVideo(pipedVideo pipedVideoDto.VideoDto, prefix string, playlistCreationStrategy string) string {
+func (syncService *SynchronizationService) determinePlaylistForVideo(pipedVideo pipedVideoDto.RelatedStreamDto, prefix string, playlistCreationStrategy string) string {
 	videoDate := time.UnixMilli(pipedVideo.Uploaded)
 	var strategySuffix string
 	if strings.EqualFold(playlistCreationStrategy, model.PlaylistMonthlyStrategy) {
