@@ -266,8 +266,8 @@ func (syncService *SynchronizationService) determineStartDateForChannel(subscrip
 
 func (syncService *SynchronizationService) syncPipedPlaylistsFromDb(playlistNames []string, subscriptionVideoRepository *videoDb.SQLiteVideoRepository) error {
 	// retrieve the playlists to be updated
-	utils.GetLoggingService().Debug("Populating playlist...")
-	utils.GetLoggingService().ConsoleProgress("[6/6] Populating playlist...")
+	utils.GetLoggingService().Debug("Populating playlists...")
+	utils.GetLoggingService().ConsoleProgress("[6/6] Populating playlists...")
 	playlistsSortedByName, err := syncService.fetchPlaylistsMap()
 	if err != nil {
 		return err
