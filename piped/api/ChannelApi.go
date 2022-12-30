@@ -37,17 +37,19 @@ func FetchChannelVideos(channel *pipedDto.ChannelDto, startDate time.Time, insta
 	var videos []pipedVideoDto.StreamDto
 	requestNextPage := false
 	for _, relatedStream := range channel.RelatedStreams {
-		video, err := FetchVideo(relatedStream, instanceBaseUrl)
-		if err != nil {
-			msg := fmt.Sprintf("unable to retrieve details for the video '%s'", relatedStream.Url)
-			utils.GetLoggingService().WarnFromError(utils.WrapError(msg, err))
-		} else {
-			if isVideoAllowed(video, startDate) {
-				videos = append(videos, *video)
-				requestNextPage = true
+		if relatedStream.Views >= 0 { // '= -1' if the video is scheduled in the future
+			video, err := FetchVideo(relatedStream, instanceBaseUrl)
+			if err != nil {
+				msg := fmt.Sprintf("unable to retrieve details for the video '%s'", relatedStream.Url)
+				utils.GetLoggingService().WarnFromError(utils.WrapError(msg, err))
 			} else {
-				requestNextPage = false
-				break
+				if isVideoAllowed(video, startDate) {
+					videos = append(videos, *video)
+					requestNextPage = true
+				} else {
+					requestNextPage = false
+					break
+				}
 			}
 		}
 	}
