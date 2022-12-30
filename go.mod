@@ -1,4 +1,4 @@
-module piped-playfeed
+module github.com/frajibe/piped-playfeed
 
 go 1.19
 
