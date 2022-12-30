@@ -3,14 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/frajibe/piped-playfeed/config"
+	"github.com/frajibe/piped-playfeed/db"
+	"github.com/frajibe/piped-playfeed/lock"
+	pipedApi "github.com/frajibe/piped-playfeed/piped/api"
+	"github.com/frajibe/piped-playfeed/settings"
+	"github.com/frajibe/piped-playfeed/sync"
+	"github.com/frajibe/piped-playfeed/utils"
 	"os"
-	"piped-playfeed/config"
-	"piped-playfeed/db"
-	"piped-playfeed/lock"
-	pipedApi "piped-playfeed/piped/api"
-	"piped-playfeed/settings"
-	"piped-playfeed/sync"
-	"piped-playfeed/utils"
 )
 
 var helpFlag = flag.Bool("help", false, "Show help")

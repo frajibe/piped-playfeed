@@ -2,9 +2,9 @@ package utils
 
 import (
 	"fmt"
+	"github.com/frajibe/piped-playfeed/settings"
 	"github.com/schollz/progressbar/v3"
 	"os"
-	"piped-playfeed/settings"
 )
 
 func CreateProgressBar(max int, description string) *progressbar.ProgressBar {

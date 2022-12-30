@@ -2,11 +2,11 @@ package utils
 
 import (
 	"fmt"
+	"github.com/frajibe/piped-playfeed/settings"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"log"
 	"os"
-	"piped-playfeed/settings"
 	"sync"
 )
 

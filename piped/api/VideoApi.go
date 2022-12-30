@@ -3,9 +3,9 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	pipedVideoDto "github.com/frajibe/piped-playfeed/piped/dto/video"
 	"io"
 	"net/http"
-	pipedVideoDto "piped-playfeed/piped/dto/video"
 	"strings"
 )
 

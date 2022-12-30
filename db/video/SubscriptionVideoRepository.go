@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	dbCommon "piped-playfeed/db/common"
+	dbCommon "github.com/frajibe/piped-playfeed/db/common"
 	"strings"
 )
 

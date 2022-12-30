@@ -3,7 +3,7 @@ package channel
 import (
 	"database/sql"
 	"errors"
-	dbCommon "piped-playfeed/db/common"
+	dbCommon "github.com/frajibe/piped-playfeed/db/common"
 )
 
 type SQLiteChannelRepository struct {

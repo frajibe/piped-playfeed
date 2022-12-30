@@ -6,12 +6,14 @@ require github.com/mattn/go-sqlite3 v1.14.15
 
 require github.com/schollz/progressbar/v3 v3.11.0
 
-require go.uber.org/zap v1.23.0
+require (
+	github.com/go-playground/validator/v10 v10.11.1
+	go.uber.org/zap v1.23.0
+)
 
 require (
 	github.com/go-playground/locales v0.14.0 // indirect
 	github.com/go-playground/universal-translator v0.18.0 // indirect
-	github.com/go-playground/validator/v10 v10.11.1 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect

@@ -3,9 +3,9 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	pipedDto "github.com/frajibe/piped-playfeed/piped/dto"
 	"io"
 	"net/http"
-	pipedDto "piped-playfeed/piped/dto"
 	"time"
 )
 

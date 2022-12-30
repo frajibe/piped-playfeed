@@ -3,12 +3,12 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	pipedDto "github.com/frajibe/piped-playfeed/piped/dto"
+	pipedVideoDto "github.com/frajibe/piped-playfeed/piped/dto/video"
+	"github.com/frajibe/piped-playfeed/utils"
 	"io"
 	"net/http"
 	"net/url"
-	pipedDto "piped-playfeed/piped/dto"
-	pipedVideoDto "piped-playfeed/piped/dto/video"
-	"piped-playfeed/utils"
 	"time"
 )
 

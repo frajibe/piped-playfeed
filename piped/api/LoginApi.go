@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	pipedLoginDto "github.com/frajibe/piped-playfeed/piped/dto/login"
 	"io"
 	"net/http"
-	pipedLoginDto "piped-playfeed/piped/dto/login"
 	"time"
 )
 

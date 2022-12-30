@@ -3,11 +3,11 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"github.com/frajibe/piped-playfeed/config"
+	channelDb "github.com/frajibe/piped-playfeed/db/channel"
+	videoDb "github.com/frajibe/piped-playfeed/db/video"
+	"github.com/frajibe/piped-playfeed/utils"
 	_ "github.com/mattn/go-sqlite3"
-	"piped-playfeed/config"
-	channelDb "piped-playfeed/db/channel"
-	videoDb "piped-playfeed/db/video"
-	"piped-playfeed/utils"
 	"sync"
 )
 

@@ -3,8 +3,8 @@ package lock
 import (
 	"errors"
 	"fmt"
+	"github.com/frajibe/piped-playfeed/utils"
 	"os"
-	"piped-playfeed/utils"
 )
 
 const lockFile = "piped-playfeed.lock"

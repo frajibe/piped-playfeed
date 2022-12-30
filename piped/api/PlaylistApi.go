@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	pipedPlaylistDto "github.com/frajibe/piped-playfeed/piped/dto/playlist"
+	pipedVideoDto "github.com/frajibe/piped-playfeed/piped/dto/video"
+	"github.com/frajibe/piped-playfeed/utils"
 	"io"
 	"net/http"
-	pipedPlaylistDto "piped-playfeed/piped/dto/playlist"
-	pipedVideoDto "piped-playfeed/piped/dto/video"
-	"piped-playfeed/utils"
 	"time"
 )
 
