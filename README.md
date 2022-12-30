@@ -197,12 +197,6 @@ A lock file is created at the startup of the application, and automatically remo
 If this file is not removed, check the content of the log file in order to find out the reason, and finally remove the lock file.
 If you think you're facing to a bug, please open a ticket on GitHub.
 
-### Old videos are weirdly ordered by date
-
-YouTube provides a video timestamp more of less accurate, that's why it's not straightforward to sort the videos with a reliable publication date. Indeed, at some point the old videos have a rounded timestamp, and so when videos have the same timestamp, they are sorted by channel.
-
-It happens when the synchronization is not ran often, the timestamp of the old videos may be too rounded. Try to synchronize more often in order to get the timestamps with the most accuracy possible.
-
 ## License
 
 [MIT license](https://github.com/frajibe/piped-playfeed/LICENSE)
