@@ -1,3 +1,4 @@
+// Package api provides functions to easily access the Piped Api.
 package api
 
 import (
@@ -9,6 +10,9 @@ import (
 	"time"
 )
 
+// FetchSubscriptions calls the remote Piped instance to return the subscriptions associated with the user token.
+//
+// Error is returned if the call failed.
 func FetchSubscriptions(instanceBaseUrl string, userToken string) (*[]pipedDto.SubscriptionDto, error) {
 	// perform the request
 	req, err := http.NewRequest("GET", instanceBaseUrl+"/subscriptions", nil)

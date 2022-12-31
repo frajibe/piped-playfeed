@@ -1,3 +1,4 @@
+// Package api provides functions to easily access the Piped Api.
 package api
 
 import (
@@ -12,6 +13,9 @@ import (
 	"time"
 )
 
+// FetchPlaylists calls the remote Piped instance to return the playlists associated with the user token.
+//
+// Error is returned if the call failed.
 func FetchPlaylists(instanceBaseUrl string, userToken string) (*[]pipedPlaylistDto.PlaylistDto, error) {
 	// perform the request
 	req, err := http.NewRequest("GET", instanceBaseUrl+"/user/playlists/", nil)
@@ -44,6 +48,9 @@ func FetchPlaylists(instanceBaseUrl string, userToken string) (*[]pipedPlaylistD
 	return &playlists, nil
 }
 
+// FetchPlaylistVideos calls the remote Piped instance to return the videos associated with a specific playlist.
+//
+// Error is returned if the call failed.
 func FetchPlaylistVideos(playlistId string, instanceBaseUrl string, userToken string) (*[]pipedVideoDto.RelatedStreamDto, error) {
 	// perform the request
 	req, err := http.NewRequest("GET", instanceBaseUrl+"/playlists/"+playlistId, nil)
@@ -76,6 +83,11 @@ func FetchPlaylistVideos(playlistId string, instanceBaseUrl string, userToken st
 	return &playlistInfo.RelatedStreams, nil
 }
 
+// CreatePlaylist calls the remote Piped instance to create a new playlist.
+//
+// The created playlist is returned if the call succeeded.
+//
+// Error is returned if the call failed.
 func CreatePlaylist(name string, instanceBaseUrl string, userToken string) (*pipedPlaylistDto.CreatedPlaylistDto, error) {
 	// perform the request
 	var requestDto = pipedPlaylistDto.CreatePlaylistDto{
@@ -116,6 +128,9 @@ func CreatePlaylist(name string, instanceBaseUrl string, userToken string) (*pip
 	return &playlist, nil
 }
 
+// AddVideosIntoPlaylist calls the remote Piped instance to insert videos into a specific playlist.
+//
+// Error is returned if the call failed.
 func AddVideosIntoPlaylist(playlistId string, videoIds *[]string, instanceBaseUrl string, userToken string) error {
 	var requestDto = pipedVideoDto.AppendVideosIntoPlaylist{
 		PlaylistId: playlistId,
@@ -144,6 +159,9 @@ func AddVideosIntoPlaylist(playlistId string, videoIds *[]string, instanceBaseUr
 	return nil
 }
 
+// RemoveAllPlaylistVideos calls the remote Piped instance to clear a specific playlist.
+//
+// Error is returned if the call failed.
 func RemoveAllPlaylistVideos(playlistId string, instanceBaseUrl string, userToken string) error {
 	playlistVideos, err := FetchPlaylistVideos(playlistId, instanceBaseUrl, userToken)
 	if err != nil {
