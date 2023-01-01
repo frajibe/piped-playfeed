@@ -1,3 +1,4 @@
+// Package config provides the application configuration management.
 package config
 
 import (
@@ -13,13 +14,20 @@ import (
 	"time"
 )
 
+// instance is the only one instance of the service (singleton)
 var instance *ConfigurationService
+
+// mutex avoids concurrency issues when retrieving the singleton
 var mutex sync.Mutex
 
+// ConfigurationService represents the service that manages the configuration of the application.
 type ConfigurationService struct {
 	Configuration model.Configuration
 }
 
+// GetConfigurationServiceInstance returns the only one instance of the service.
+//
+// If the service doesn't exist, it is automatically created once for all.
 func GetConfigurationServiceInstance() *ConfigurationService {
 	if instance == nil {
 		mutex.Lock()
@@ -31,6 +39,10 @@ func GetConfigurationServiceInstance() *ConfigurationService {
 	return instance
 }
 
+// Init initializes the service using a path to the configuration file.
+// Once done, the service is ready to return the configuration structure.
+//
+// Note that the conf file content is checked, and default values are used if needed.
 func (confService *ConfigurationService) Init(filePath string) (*model.Configuration, error) {
 	// unmarshall json
 	err := confService.parseFile(filePath)
