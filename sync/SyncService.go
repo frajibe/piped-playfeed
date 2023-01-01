@@ -69,6 +69,7 @@ func (syncService *SynchronizationService) Synchronize() error {
 	if err != nil {
 		return utils.WrapError("unable to synchronize the playlists in database", err)
 	}
+	// todo: en + de marquer ce qui a été delete, faudrait ajouter les videos manuellement ajoutées
 
 	// fetch the new videos
 	channelRepository := db.GetDatabaseServiceInstance().ChannelRepository
@@ -114,7 +115,8 @@ func (syncService *SynchronizationService) indexVideos(newPipedVideos *[]pipedVi
 				}
 				_, err = videoRepository.Create(videoDb.SubscriptionVideo{
 					Id:       videoId,
-					Date:     newPipedVideo.UploadDate,
+					UploadDate:     newPipedVideo.UploadDate,
+					Uploaded: newPipedVideo.Uploaded
 					Removed:  0,
 					Playlist: playlistName,
 				})

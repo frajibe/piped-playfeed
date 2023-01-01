@@ -1,8 +1,9 @@
 package video
 
 type SubscriptionVideo struct {
-	Id       string
-	Date     string
-	Removed  int
-	Playlist string
+	Id         string
+	UploadDate string
+	Uploaded   int64
+	Removed    int
+	Playlist   string
 }

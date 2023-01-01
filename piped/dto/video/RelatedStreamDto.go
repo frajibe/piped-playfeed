@@ -1,6 +1,7 @@
 package video
 
 type RelatedStreamDto struct {
-	Url   string
-	Views int64
+	Uploaded int64
+	Url      string
+	Views    int64
 }
