@@ -48,10 +48,12 @@ func (syncService *SynchronizationService) Synchronize() error {
 
 	// fetch the subscribed channels
 	utils.GetLoggingService().Debug("Fetching playlists")
+	playlistProgressBar := utils.CreateInfiniteProgressBar("[2/5] Fetching playlists...")
 	pipedPlaylists, err := syncService.fetchPlaylists()
 	if err != nil {
 		return utils.WrapError("unable to retrieve the playlists from the Piped instance", err)
 	}
+	utils.FinalizeProgressBar(playlistProgressBar, len(*pipedPlaylists))
 
 	// sync the db with the existing playlists
 	utils.GetLoggingService().Debug("Synchronizing Piped playlists to database")
@@ -343,7 +345,6 @@ func (syncService *SynchronizationService) determinePlaylistForVideo(pipedVideo 
 }
 
 func (syncService *SynchronizationService) fetchPlaylists() (*[]pipedPlaylistDto.PlaylistDto, error) {
-	playlistProgressBar := utils.CreateInfiniteProgressBar("[2/5] Fetching playlists...")
 	var filteredPlaylists []pipedPlaylistDto.PlaylistDto
 	prefix := config.GetConfigurationServiceInstance().Configuration.Synchronization.PlaylistPrefix
 	pipedPlaylists, err := pipedApi.FetchPlaylists(config.GetConfigurationServiceInstance().Configuration.Instance, pipedApi.GetToken())
@@ -355,7 +356,6 @@ func (syncService *SynchronizationService) fetchPlaylists() (*[]pipedPlaylistDto
 			filteredPlaylists = append(filteredPlaylists, playlist)
 		}
 	}
-	utils.FinalizeProgressBar(playlistProgressBar, len(filteredPlaylists))
 	return &filteredPlaylists, nil
 }
 
