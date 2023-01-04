@@ -33,6 +33,7 @@ func FetchVideo(videoMeta pipedVideoDto.RelatedStreamDto, instanceBaseUrl string
 		return nil, err
 	}
 	video.Url = videoMeta.Url
+	video.Uploaded = videoMeta.Uploaded
 	return &video, nil
 }
 
