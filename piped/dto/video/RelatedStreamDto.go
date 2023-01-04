@@ -3,6 +3,7 @@ package video
 
 // RelatedStreamDto represents the model of the Piped video/steam short description.
 type RelatedStreamDto struct {
-	Url   string
-	Views int64
+	Uploaded int64
+	Url      string
+	Views    int64
 }
