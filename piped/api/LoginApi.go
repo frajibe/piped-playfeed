@@ -1,3 +1,4 @@
+// Package api provides functions to easily access the Piped Api.
 package api
 
 import (
@@ -10,12 +11,18 @@ import (
 	"time"
 )
 
+// token associated to the authenticated user, defined once the authentication succeeded.
 var token string
 
+// GetToken returns the token of the current authenticated user.
 func GetToken() string {
 	return token
 }
 
+// Login calls the remote Piped instance in order to authenticate using a username and password.
+// Once done, the related user token can be retrieved using GetToken.
+//
+// Error is returned if the call failed.
 func Login(username string, password string, instanceBaseUrl string) error {
 	// perform the request
 	var requestDto = pipedLoginDto.LoginRequestDto{
