@@ -1,3 +1,4 @@
+// Package api provides functions to easily access the Piped Api.
 package api
 
 import (
@@ -9,6 +10,9 @@ import (
 	"strings"
 )
 
+// FetchVideo calls the remote Piped instance and returns the video corresponding to video metadata.
+//
+// Error is returned if the call failed.
 func FetchVideo(videoMeta pipedVideoDto.RelatedStreamDto, instanceBaseUrl string) (*pipedVideoDto.StreamDto, error) {
 	// perform the request
 	response, err := http.Get(instanceBaseUrl + "/streams/" + ExtractVideoIdFromUrl(videoMeta.Url))
@@ -32,6 +36,11 @@ func FetchVideo(videoMeta pipedVideoDto.RelatedStreamDto, instanceBaseUrl string
 	return &video, nil
 }
 
+// ExtractVideoIdFromUrl returns the video id corresponding to a video url.
+//
+// Example:
+//
+//	url='/watch?v=123-456789' -> id='123-456789'
 func ExtractVideoIdFromUrl(url string) string {
 	return strings.Split(url, "=")[1]
 }

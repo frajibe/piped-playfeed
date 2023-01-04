@@ -1,3 +1,4 @@
+// Package api provides functions to easily access the Piped Api.
 package api
 
 import (
@@ -12,6 +13,9 @@ import (
 	"time"
 )
 
+// FetchChannel calls the remote Piped instance to return a specific channel.
+//
+// Error is returned if the call failed.
 func FetchChannel(subscription pipedDto.SubscriptionDto, instanceBaseUrl string) (*pipedDto.ChannelDto, error) {
 	response, err := http.Get(instanceBaseUrl + subscription.Url)
 	if err != nil {
@@ -33,6 +37,9 @@ func FetchChannel(subscription pipedDto.SubscriptionDto, instanceBaseUrl string)
 	return &channel, nil
 }
 
+// FetchChannelVideos calls the remote Piped instance to return the videos associated with a specific channel.
+//
+// Error is returned if the call failed.
 func FetchChannelVideos(channel *pipedDto.ChannelDto, startDate time.Time, instanceBaseUrl string) (*[]pipedVideoDto.StreamDto, error) {
 	var videos []pipedVideoDto.StreamDto
 	requestNextPage := false
