@@ -65,16 +65,17 @@ func (r *SQLiteVideoRepository) GetById(id string) (*SubscriptionVideo, error) {
 }
 
 func (r *SQLiteVideoRepository) GetByPlaylist(playlistName string) (*[]SubscriptionVideo, error) {
-	rows, err := r.db.Query("SELECT * FROM subscriptions_videos WHERE playlist = ? AND removed = 0 ORDER BY uploadDate DESC", playlistName)
+	rows, err := r.db.Query("SELECT *, unixepoch(uploadDate)*1000 as max_date FROM subscriptions_videos WHERE playlist = ? AND removed = 0 ORDER BY max(uploaded, max_date) DESC", playlistName)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	var videos []SubscriptionVideo
+	var maxDate int64
 	for rows.Next() {
 		var video SubscriptionVideo
-		if err := rows.Scan(&video.Id, &video.UploadDate, &video.Uploaded, &video.Removed, &video.Playlist); err != nil {
+		if err := rows.Scan(&video.Id, &video.UploadDate, &video.Uploaded, &video.Removed, &video.Playlist, &maxDate); err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				return nil, dbCommon.ErrNotExists
 			}
