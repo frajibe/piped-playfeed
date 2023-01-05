@@ -1,5 +1,8 @@
 # piped-playfeed
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
+[![Go Reference](https://pkg.go.dev/badge/github.com/frajibe/piped-playfeed.svg)](https://pkg.go.dev/github.com/frajibe/piped-playfeed)
+
 Tool for [Piped](https://github.com/TeamPiped/Piped) and written in Go (Golang).
 
 Keep your feeds clear by creating and keeping up-to-date weekly/monthly playlists, based on your subscriptions.
