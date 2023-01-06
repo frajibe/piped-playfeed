@@ -1,7 +1,8 @@
 # piped-playfeed
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 [![Go Reference](https://pkg.go.dev/badge/github.com/frajibe/piped-playfeed.svg)](https://pkg.go.dev/github.com/frajibe/piped-playfeed)
+[![Go Report Card](https://goreportcard.com/badge/github.com/frajibe/piped-playfeed)](https://goreportcard.com/report/github.com/frajibe/piped-playfeed)
+[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](https://opensource.org/licenses/MIT)
 
 Tool for [Piped](https://github.com/TeamPiped/Piped) and written in Go (Golang).
 
