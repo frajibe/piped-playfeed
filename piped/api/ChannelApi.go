@@ -60,7 +60,7 @@ func FetchChannelVideos(channel *pipedDto.ChannelDto, startDate time.Time, insta
 			}
 		}
 	}
-	if requestNextPage {
+	if requestNextPage && len(channel.Nextpage) != 0 {
 		paginatedVideos, err := fetchPaginatedVideos(channel.Id, startDate, channel.Nextpage, instanceBaseUrl)
 		if err != nil {
 			return nil, err
@@ -110,7 +110,7 @@ func fetchPaginatedVideos(channelId string, startDate time.Time, nextPageUrl str
 			}
 		}
 	}
-	if requestNextPage {
+	if requestNextPage && len(nextPage.Nextpage) != 0 {
 		nextVideos, err := fetchPaginatedVideos(channelId, startDate, nextPage.Nextpage, instanceBaseUrl)
 		if err != nil {
 			return nil, err
