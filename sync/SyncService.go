@@ -49,7 +49,7 @@ func (syncService *SynchronizationService) Synchronize() error {
 	// fetch the subscribed channels
 	utils.GetLoggingService().Debug("Fetching playlists")
 	playlistProgressBar := utils.CreateInfiniteProgressBar("[2/5] Fetching playlists...")
-	pipedPlaylists, err := syncService.fetchPlaylists()
+	pipedPlaylists, err := syncService.fetchPlaylistsMap()
 	if err != nil {
 		return utils.WrapError("unable to retrieve the playlists from the Piped instance", err)
 	}
@@ -95,7 +95,7 @@ func (syncService *SynchronizationService) fetchSubscriptions() (*[]pipedDto.Sub
 	return pipedSubscriptions, nil
 }
 
-func (syncService *SynchronizationService) syncPipedPlaylistsToDb(pipedPlaylists *[]pipedPlaylistDto.PlaylistDto, subscriptionVideoRepository *videoDb.SQLiteVideoRepository) error {
+func (syncService *SynchronizationService) syncPipedPlaylistsToDb(pipedPlaylists *map[string]pipedPlaylistDto.PlaylistDto, subscriptionVideoRepository *videoDb.SQLiteVideoRepository) error {
 	// retrieve the content of the playlists
 	var playlistsVideosIds []string
 	progressBar := utils.CreateProgressBar(len(*pipedPlaylists), "[3/5] Indexing playlists...")
@@ -285,13 +285,13 @@ func (syncService *SynchronizationService) syncPipedPlaylistsFromDb(playlistName
 	// retrieve the playlists to be updated
 	utils.GetLoggingService().Debug("Populating playlists...")
 	utils.GetLoggingService().ConsoleProgress("[5/5] Populating playlists...")
-	playlistsSortedByName, err := syncService.fetchPlaylistsMap()
+	pipedPlaylists, err := syncService.fetchPlaylistsMap()
 	if err != nil {
 		return err
 	}
 	for _, playlistName := range playlistNames {
 		utils.GetLoggingService().Debug(fmt.Sprintf("%s", playlistName))
-		pipedPlaylist, playlistPresent := (*playlistsSortedByName)[playlistName]
+		pipedPlaylist, playlistPresent := (*pipedPlaylists)[playlistName]
 		var playlistId string
 		if !playlistPresent {
 			// create the playlist if missing
@@ -344,29 +344,17 @@ func (syncService *SynchronizationService) determinePlaylistForVideo(pipedVideo 
 	return fmt.Sprintf("%v%v %v", prefix, videoDate.Year(), strategySuffix), nil
 }
 
-func (syncService *SynchronizationService) fetchPlaylists() (*[]pipedPlaylistDto.PlaylistDto, error) {
-	var filteredPlaylists []pipedPlaylistDto.PlaylistDto
+func (syncService *SynchronizationService) fetchPlaylistsMap() (*map[string]pipedPlaylistDto.PlaylistDto, error) {
+	var pipedPlaylistsByName = make(map[string]pipedPlaylistDto.PlaylistDto)
 	prefix := config.GetConfigurationServiceInstance().Configuration.Synchronization.PlaylistPrefix
 	pipedPlaylists, err := pipedApi.FetchPlaylists(config.GetConfigurationServiceInstance().Configuration.Instance, pipedApi.GetToken())
 	if err != nil {
 		return nil, err
 	}
-	for _, playlist := range *pipedPlaylists {
-		if strings.HasPrefix(playlist.Name, prefix) {
-			filteredPlaylists = append(filteredPlaylists, playlist)
-		}
-	}
-	return &filteredPlaylists, nil
-}
-
-func (syncService *SynchronizationService) fetchPlaylistsMap() (*map[string]pipedPlaylistDto.PlaylistDto, error) {
-	var pipedPlaylistsByName = make(map[string]pipedPlaylistDto.PlaylistDto)
-	pipedPlaylists, err := syncService.fetchPlaylists()
-	if err != nil {
-		return nil, utils.WrapError("unable to retrieve the playlists", err)
-	}
 	for _, pipedPlaylist := range *pipedPlaylists {
-		pipedPlaylistsByName[pipedPlaylist.Name] = pipedPlaylist
+		if strings.HasPrefix(pipedPlaylist.Name, prefix) {
+			pipedPlaylistsByName[pipedPlaylist.Name] = pipedPlaylist
+		}
 	}
 	return &pipedPlaylistsByName, nil
 }
