@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 )
 
@@ -42,24 +43,33 @@ func FetchChannel(subscription pipedDto.SubscriptionDto, instanceBaseUrl string)
 // Error is returned if the call failed.
 func FetchChannelVideos(channel *pipedDto.ChannelDto, startDate time.Time, instanceBaseUrl string) (*[]pipedVideoDto.StreamDto, error) {
 	var videos []pipedVideoDto.StreamDto
-	requestNextPage := false
+	requestNextPage := true
+	var wg sync.WaitGroup
+	wg.Add(len(channel.RelatedStreams))
+	var mutex sync.Mutex
 	for _, relatedStream := range channel.RelatedStreams {
-		if relatedStream.Views >= 0 { // '= -1' if the video is scheduled in the future
-			video, err := FetchVideo(relatedStream, instanceBaseUrl)
-			if err != nil {
-				msg := fmt.Sprintf("unable to retrieve details for the video '%s'", relatedStream.Url)
-				utils.GetLoggingService().WarnFromError(utils.WrapError(msg, err))
-			} else {
-				if isVideoAllowed(video, startDate) {
-					videos = append(videos, *video)
-					requestNextPage = true
+		relatedStream := relatedStream
+		go func() {
+			defer wg.Done()
+			if relatedStream.Views >= 0 { // '= -1' if the video is scheduled in the future
+				video, err := FetchVideo(relatedStream, instanceBaseUrl)
+				if err != nil {
+					msg := fmt.Sprintf("unable to retrieve details for the video '%s'", relatedStream.Url)
+					utils.GetLoggingService().WarnFromError(utils.WrapError(msg, err))
 				} else {
-					requestNextPage = false
-					break
+					if isVideoAllowed(video, startDate) {
+						mutex.Lock()
+						videos = append(videos, *video)
+						mutex.Unlock()
+					} else {
+						requestNextPage = false
+					}
 				}
 			}
-		}
+		}()
 	}
+	wg.Wait()
+
 	if requestNextPage && len(channel.Nextpage) != 0 {
 		paginatedVideos, err := fetchPaginatedVideos(channel.Id, startDate, channel.Nextpage, instanceBaseUrl)
 		if err != nil {
@@ -91,25 +101,36 @@ func fetchPaginatedVideos(channelId string, startDate time.Time, nextPageUrl str
 	if err != nil {
 		return nil, err
 	}
+
+	// analyze the content
 	var videos []pipedVideoDto.StreamDto
-	var requestNextPage = false
+	var requestNextPage = true
+	var wg sync.WaitGroup
+	wg.Add(len(nextPage.RelatedStreams))
+	var mutex sync.Mutex
 	for _, relatedStream := range nextPage.RelatedStreams {
-		if relatedStream.Views >= 0 { // '= -1' if the video is scheduled in the future
-			video, err := FetchVideo(relatedStream, instanceBaseUrl)
-			if err != nil {
-				msg := fmt.Sprintf("unable to retrieve details for the video '%s'", relatedStream.Url)
-				utils.GetLoggingService().WarnFromError(utils.WrapError(msg, err))
-			} else {
-				if isVideoAllowed(video, startDate) {
-					videos = append(videos, *video)
-					requestNextPage = true
+		relatedStream := relatedStream
+		go func() {
+			defer wg.Done()
+			if relatedStream.Views >= 0 { // '= -1' if the video is scheduled in the future
+				video, err := FetchVideo(relatedStream, instanceBaseUrl)
+				if err != nil {
+					msg := fmt.Sprintf("unable to retrieve details for the video '%s'", relatedStream.Url)
+					utils.GetLoggingService().WarnFromError(utils.WrapError(msg, err))
 				} else {
-					requestNextPage = false
-					break
+					if isVideoAllowed(video, startDate) {
+						mutex.Lock()
+						videos = append(videos, *video)
+						mutex.Unlock()
+					} else {
+						requestNextPage = false
+					}
 				}
 			}
-		}
+		}()
 	}
+	wg.Wait()
+
 	if requestNextPage && len(nextPage.Nextpage) != 0 {
 		nextVideos, err := fetchPaginatedVideos(channelId, startDate, nextPage.Nextpage, instanceBaseUrl)
 		if err != nil {
