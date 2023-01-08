@@ -302,7 +302,7 @@ func (syncService *SynchronizationService) syncPipedPlaylistsFromDb(playlistName
 			playlistId = playlist.PlaylistId
 		} else {
 			// clear the existing playlist
-			err := pipedApi.RemoveAllPlaylistVideos(pipedPlaylist.Id, config.GetConfigurationServiceInstance().Configuration.Instance, pipedApi.GetToken())
+			err := pipedApi.ClearPlaylistVideos(pipedPlaylist.Id, config.GetConfigurationServiceInstance().Configuration.Instance, pipedApi.GetToken())
 			if err != nil {
 				return utils.WrapError("can't clear the existing playlist", err)
 			}
