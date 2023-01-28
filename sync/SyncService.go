@@ -41,6 +41,9 @@ func (syncService *SynchronizationService) Synchronize() error {
 	// fetch the user subscriptions
 	utils.GetLoggingService().Debug("Fetching subscriptions")
 	pipedSubscriptions, err := syncService.fetchSubscriptions()
+	if err != nil {
+		return err
+	}
 	if len(*pipedSubscriptions) == 0 {
 		utils.GetLoggingService().Console("no subscriptions found, stopping the synchronization")
 		return nil
