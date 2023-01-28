@@ -49,7 +49,7 @@ go build
 
 ### Configure
 
-First of all, create the following configuration file by copying [this template](https://github.com/frajibe/piped-playfeed/conf.json).
+First of all, create the following configuration file by copying [this template](https://github.com/frajibe/piped-playfeed/piped-playfeed-conf.json).
 
 See below for the details of the configuration.
 
@@ -183,14 +183,6 @@ There are multiple solutions to periodically run an application, here are some e
     ```
     0 16 * * * bash -c '/home/me/piped-playfeed --conf /home/me/playfeed-conf.json --sync --silent'
     ```
-
-## Limitations
-
-### Videos manually added to the playlist are removed
-
-For now, _piped-playfeed_ doesn't manage the videos manually added into its playlists (i.e. the ones created by _piped-playfeed_). These are always removed when synchronizing.
-
-As a workaround, add videos using your own playlists.
 
 ## Troubleshooting
 
