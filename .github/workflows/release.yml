@@ -27,4 +27,4 @@ jobs:
           goarch: ${{ matrix.goarch }}
           goversion: "1.19.5"
           binary_name: "piped-playfeed"
-          extra_files: LICENSE README.md
+          extra_files: LICENSE README.md piped-playfeed-conf.json
