@@ -68,7 +68,7 @@ See below for the details of the configuration.
 | `playlistPrefix` | Prefix to apply on the managed playlists                                                   |    no     |   `PF - `   |
 | `strategy`       | Playlist creation strategy among `month` and `week`                                        |    no     |   `month`   |
 | `type`           | Type among `duration` and `date`                                                           |    no     | `duration`  |
-| `duration/unit`  | If `type`=`duration`. Duration unit among `year`, `month` and `date`                       |    no     |   `month`   |
+| `duration/unit`  | If `type`=`duration`. Duration unit among `month` and `day`                                |    no     |   `month`   |
 | `duration/value` | If `type`=`duration`. Positive integer matching the duration unit                          |    no     |     `1`     |
 | `date`           | If `type`=`date`. Format must be YYYY-MM-dd.<br/>Videos before this date won't be indexed. |    no     | 1 month ago |
 
