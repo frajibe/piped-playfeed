@@ -65,7 +65,7 @@ See below for the details of the configuration.
 
 | Attribute        | Description                                                                                | Mandatory |   Default   |
 |:-----------------|:-------------------------------------------------------------------------------------------|:---------:|:-----------:|
-| `playlistPrefix` | Prefix to apply on the managed playlist                                                    |    no     |     ``      |
+| `playlistPrefix` | Prefix to apply on the managed playlists                                                   |    no     |   `PF - `   |
 | `strategy`       | Playlist creation strategy among `month` and `week`                                        |    no     |   `month`   |
 | `type`           | Type among `duration` and `date`                                                           |    no     | `duration`  |
 | `duration/unit`  | If `type`=`duration`. Duration unit among `year`, `month` and `date`                       |    no     |   `month`   |

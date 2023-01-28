@@ -6,7 +6,7 @@
     },
     "database": "piped-playfeed.db",
     "synchronization": {
-        "playlistPrefix": "",
+        "playlistPrefix": "PF - ",
         "strategy": "month",
         "type": "duration",
         "duration": {

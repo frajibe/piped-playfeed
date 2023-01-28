@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+var defaultPlaylistPrefix = "PF - "
 var SyncDurationType = "duration"
 var SyncDateType = "date"
 
@@ -20,6 +21,9 @@ type Synchronization struct {
 }
 
 func (synchronization *Synchronization) SetDefaults() {
+	if strings.TrimSpace(synchronization.PlaylistPrefix) == "" {
+		synchronization.PlaylistPrefix = defaultPlaylistPrefix
+	}
 	if strings.TrimSpace(synchronization.Strategy) == "" {
 		synchronization.Strategy = PlaylistMonthlyStrategy
 	}
