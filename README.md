@@ -49,7 +49,7 @@ go build
 
 ### Configure
 
-First of all, create the following configuration file by copying [this template](https://github.com/frajibe/piped-playfeed/piped-playfeed-conf.json).
+First of all, create the following configuration file by copying the template `piped-playfeed-conf.json` from the sources.
 
 See below for the details of the configuration.
 
